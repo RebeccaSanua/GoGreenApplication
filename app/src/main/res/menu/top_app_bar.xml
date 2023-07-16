@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.con/apk/res-auto">
+    <item
+        android:id="@+id/login"
+        android:title="Login"
+        android:contentDescription="Login"
+        app:showAsAction="ifRoom"
+        />
+
+        <item
+            android:id="@+id/Register"
+            android:title="Registrazione"
+            app:showAsAction="ifRoom"
+            />
+
+</menu>
