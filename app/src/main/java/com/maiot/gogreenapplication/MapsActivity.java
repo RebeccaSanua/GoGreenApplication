@@ -1,25 +1,30 @@
 package com.maiot.gogreenapplication;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.Manifest;
 import android.os.Bundle;
+import android.service.autofill.VisibilitySetterAction;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.graphics.Color;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -36,6 +41,11 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
+import com.maiot.gogreenapplication.SessionManager;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnCameraIdleListener {
 
@@ -47,24 +57,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     ImageView ShowHome_maps;
     ImageView ShowScanner_maps;
     ImageView ShowMap_maps;
+    Button openScanner;
 
+    TextView textScanner;
+
+    // Dichiarazione delle variabili di istanza per i marker
+    private Marker marker1;
+    private Marker marker2;
+    private Marker marker3;
+    private Marker marker4;
+    private Marker marker5;
+    private Marker marker6;
+    private Marker marker7;
+    private Marker marker8;
+
+    //codice univoco QRcode auto
+    private String univocoTendina;
     private GoogleMap googleMap;
     private CircleOptions circleOptions;
+    private LinearLayout tendinaCar;
+    private Button buttonShowCar;
 
+    private Button prenota;
+    private Button scanner;
+
+    private Button terminaNoleggio;
+    private SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        tendinaCar = findViewById(R.id.tendinaCar);
+        buttonShowCar = findViewById(R.id.buttonShowCar);
+        prenota = findViewById(R.id.prenota);
+        scanner = findViewById(R.id.openScanner);
+        terminaNoleggio = findViewById(R.id.TerminaNoleggio);
+        sharedPreferences = getSharedPreferences("MarkerData", Context.MODE_PRIVATE);
+
         map=findViewById(R.id.map);
 
         fusedClient= LocationServices.getFusedLocationProviderClient(this);
         getLocation();
+        openScanner = findViewById(R.id.openScanner);
         ShowHome_maps = findViewById(R.id.ShowHome_maps);
         ShowScanner_maps = findViewById(R.id.ShowScanner_maps);
         ShowMap_maps = findViewById(R.id.ShowMap_maps);
 
         final AnimatorSet clickAnimation = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.click_animation);
+        terminaNoleggio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SessionManager.endSession();
+            }
+        });
 
         ShowHome_maps.setOnClickListener(view -> {
             ShowHome_maps.setPivotX(ShowHome_maps.getWidth() / 2);
@@ -87,6 +133,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ShowMap_maps.setOnClickListener(view -> {
             Intent intent = new Intent(MapsActivity.this, MapsActivity.class);
             startActivity(intent);
+        });
+
+        openScanner.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                IntentIntegrator intentIntegrator = new IntentIntegrator(MapsActivity.this);
+                intentIntegrator.setPrompt("Scannerizza il QR code");
+                intentIntegrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE);
+                intentIntegrator.initiateScan();
+            }
         });
     }
 
@@ -191,27 +247,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .icon(markerIcon);
 
 
-        Marker marker1 = googleMap.addMarker(markerOptions1);
-        googleMap.addMarker(markerOptions2);
-        googleMap.addMarker(markerOptions3);
-        googleMap.addMarker(markerOptions4);
-        googleMap.addMarker(markerOptions5);
-        googleMap.addMarker(markerOptions6);
-        googleMap.addMarker(markerOptions7);
-        googleMap.addMarker(markerOptions8);
+        marker1 = googleMap.addMarker(markerOptions1);
+        marker2 = googleMap.addMarker(markerOptions2);
+        marker3 = googleMap.addMarker(markerOptions3);
+        marker4 = googleMap.addMarker(markerOptions4);
+        marker5 = googleMap.addMarker(markerOptions5);
+        marker6 = googleMap.addMarker(markerOptions6);
+        marker7 = googleMap.addMarker(markerOptions7);
+        marker8 = googleMap.addMarker(markerOptions8);
 
         googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            LinearLayout tendinaCar = findViewById(R.id.tendinaCar);
-            Button buttonShowCar = findViewById(R.id.buttonShowCar);
             @Override
             public boolean onMarkerClick(Marker marker) {
                 if (marker.equals(marker1)) {
+                    tendinaCar = findViewById(R.id.tendinaCar);
+                    buttonShowCar = findViewById(R.id.buttonShowCar);
+                    prenota = findViewById(R.id.prenota);
+                    scanner = findViewById(R.id.openScanner);
+                    terminaNoleggio = findViewById(R.id.TerminaNoleggio);
                     if (buttonShowCar.getVisibility() == View.VISIBLE && tendinaCar.getVisibility() == View.GONE) {
                         buttonShowCar.setVisibility(View.GONE);
                         tendinaCar.setVisibility(View.VISIBLE);
+                        univocoTendina = getUnivocoTendinaByMarker(marker1);
+                        SharedPreferences sharedPreferences = getSharedPreferences("MarkerData", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("univocoTendina", univocoTendina);
+                        editor.apply();
                         return false;
-                    }
-                    else{
+                    } else{
                         buttonShowCar.setVisibility(View.VISIBLE);
                         tendinaCar.setVisibility(View.GONE);
                         return false;
@@ -219,21 +282,76 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
                 return false;
             }
+
         });
 
         ImageView closeTendina = findViewById(R.id.closeTendina);
 
         closeTendina.setOnClickListener(new View.OnClickListener() {
-            LinearLayout tendinaCar = findViewById(R.id.tendinaCar);
-            Button buttonShowCar = findViewById(R.id.buttonShowCar);
+
             @Override
             public void onClick(View v) {
+                tendinaCar = findViewById(R.id.tendinaCar);
+                buttonShowCar = findViewById(R.id.buttonShowCar);
                 buttonShowCar.setVisibility(View.VISIBLE);
                 tendinaCar.setVisibility(View.GONE);
             }
         });
 
     }
+    private String getUnivocoTendinaByMarker(Marker marker) {
+        if (marker.equals(marker1)) {
+            return "car0001";
+        } else if (marker.equals(marker2)) {
+            return "valore univoco del marker2";
+        } else if (marker.equals(marker3)) {
+            return "valore univoco del marker3";
+        } else if (marker.equals(marker4)) {
+            return "valore univoco del marker4";
+        } else if (marker.equals(marker5)) {
+            return "valore univoco del marker5";
+        } else if (marker.equals(marker6)) {
+            return "valore univoco del marker6";
+        } else if (marker.equals(marker7)) {
+            return "valore univoco del marker7";
+        } else if (marker.equals(marker8)) {
+            return "valore univoco del marker8";
+        }
+
+        return ""; // Valore predefinito nel caso in cui il marker non corrisponda a nessuno dei casi sopra
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
+        IntentResult intentResult = IntentIntegrator.parseActivityResult(requestCode,resultCode,data);
+        if(intentResult != null){
+            SharedPreferences sharedPreferences = getSharedPreferences("MarkerData", Context.MODE_PRIVATE);
+            String univocoTendina = sharedPreferences.getString("univocoTendina", "");
+            String contents = intentResult.getContents();
+            TextView textScanner = findViewById(R.id.textScanner);
+            if (contents.equals(univocoTendina)) {
+                // Sovrascrivi il TextView con l'ID "textScanner" con la frase "La prenotazione è avvenuta con successo!"
+                textScanner.setText("La prenotazione è avvenuta con successo!");
+                // Passaggio delle variabili a SessionManager
+                SessionManager.setTendinaCar(tendinaCar);
+                SessionManager.setButtonShowCar(buttonShowCar);
+                SessionManager.setScannerCar(openScanner);
+                SessionManager.setPrenotaCar(prenota);
+                SessionManager.setTerminaNoleggio(terminaNoleggio);
+                SessionManager.startSession();
+
+            } else {
+                 /* TODO: spostare il testo in alto e inserire kilometraggio e timer*/
+                textScanner.setText("Sembrano non corrispondere i codici, riprova!");
+                // Il codice scannerizzato non corrisponde al valore univoco della tendina
+            }
+        }else{
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+
     private double calculateRadius(float zoom) {
         // Calcola il raggio in base allo zoom
         // Esempio di implementazione: il raggio diminuisce gradualmente con l'aumentare dello zoom

@@ -39,6 +39,8 @@ dependencies {
     //INCLUDE LA LIBRERIA PLAY-SERVICES-MAPS
     implementation 'com.google.android.gms:play-services-location:21.0.1'
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
+
     //INCLUDE LA LIBRERIA PER LO SCANNER
-    implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
+    implementation 'com.google.zxing:core:3.4.1'
+    implementation 'com.journeyapps:zxing-android-embedded:4.2.0'
 }

@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- Questa autorizzazione consente all'applicazione di accedere a Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera"/>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -20,7 +22,10 @@
             android:exported="false" />
         <activity
             android:name=".ScannerActivity"
-            android:exported="false" />
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation"
+            android:exported="false"
+            />
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -29,7 +34,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDz3N9L_CukYsWEuKodL3yjrn94JX04crc" />
